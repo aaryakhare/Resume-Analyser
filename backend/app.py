@@ -1,6 +1,12 @@
+from sentence_transformers import SentenceTransformer
+from sklearn.metrics.pairwise import cosine_similarity
 import pdfplumber
 from flask import Flask, request, jsonify
 import os
+
+model = SentenceTransformer(
+    "all-MiniLM-L6-v2"
+)
 SKILLS = [
     "python",
     "java",
@@ -117,6 +123,48 @@ def ats_feedback(score):
 
     else:
         return "Poor ATS Resume"
+def calculate_match_score(
+    resume_text,
+    job_description
+):
+
+    resume_embedding = model.encode(
+        [resume_text]
+    )
+
+    jd_embedding = model.encode(
+        [job_description]
+    )
+
+    similarity = cosine_similarity(
+        resume_embedding,
+        jd_embedding
+    )[0][0]
+
+    return float(
+    round(
+        similarity * 100,
+        2
+    )
+)
+def find_missing_skills(
+    detected_skills,
+    job_description
+):
+
+    missing = []
+
+    jd_text = job_description.lower()
+
+    for skill in SKILLS:
+
+        if (
+            skill in jd_text
+            and skill not in detected_skills
+        ):
+            missing.append(skill)
+
+    return missing
     
 @app.route("/")
 def home():
@@ -124,6 +172,43 @@ def home():
 
 
 @app.route("/upload", methods=["POST"])
+@app.route(
+    "/match",
+    methods=["POST"]
+)
+def match_resume():
+
+    data = request.get_json()
+
+    resume_text = data["resume_text"]
+
+    job_description = data[
+        "job_description"
+    ]
+
+    detected_skills = detect_skills(
+        resume_text
+    )
+
+    match_score = calculate_match_score(
+        resume_text,
+        job_description
+    )
+
+    missing_skills = find_missing_skills(
+        detected_skills,
+        job_description
+    )
+
+    return jsonify({
+
+        "match_score":
+        match_score,
+
+        "missing_skills":
+        missing_skills
+
+    })
 def upload_resume():
 
     if "resume" not in request.files:
