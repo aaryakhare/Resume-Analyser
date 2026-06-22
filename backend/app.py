@@ -56,7 +56,68 @@ def detect_skills(text):
             found_skills.append(skill)
 
     return found_skills
+def calculate_ats_score(text, skills):
 
+    score = 0
+
+    text = text.lower()
+
+    # Skills
+    if len(skills) >= 5:
+        score += 20
+
+    # Education
+    education_keywords = [
+        "b.tech",
+        "btech",
+        "bachelor",
+        "degree",
+        "college",
+        "university"
+    ]
+
+    if any(word in text for word in education_keywords):
+        score += 20
+
+    # Projects
+    project_keywords = [
+        "project",
+        "projects"
+    ]
+
+    if any(word in text for word in project_keywords):
+        score += 20
+
+    # Experience
+    experience_keywords = [
+        "experience",
+        "internship",
+        "intern"
+    ]
+
+    if any(word in text for word in experience_keywords):
+        score += 20
+
+    # Contact Information
+    if "@" in text:
+        score += 20
+
+    return score
+    
+def ats_feedback(score):
+
+    if score >= 80:
+        return "Excellent ATS Resume"
+
+    elif score >= 60:
+        return "Good Resume, Needs Improvements"
+
+    elif score >= 40:
+        return "Average Resume"
+
+    else:
+        return "Poor ATS Resume"
+    
 @app.route("/")
 def home():
     return "Backend Running"
@@ -86,10 +147,17 @@ def upload_resume():
 
     resume_text = extract_text_from_pdf(filepath)
     detected_skills = detect_skills(resume_text)
-    
+    ats_score = calculate_ats_score(
+    resume_text,
+    detected_skills
+    )
+    feedback = ats_feedback(ats_score)
+
     return jsonify({
     "message": "Resume uploaded successfully",
     "filename": file.filename,
+    "ats_score": ats_score,
+    "feedback": feedback,
     "skills": detected_skills,
     "text": resume_text
     })
