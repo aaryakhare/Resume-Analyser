@@ -123,6 +123,7 @@ def ats_feedback(score):
 
     else:
         return "Poor ATS Resume"
+    
 def calculate_match_score(
     resume_text,
     job_description
@@ -141,12 +142,8 @@ def calculate_match_score(
         jd_embedding
     )[0][0]
 
-    return float(
-    round(
-        similarity * 100,
-        2
-    )
-)
+    return round(float(similarity * 100), 2)
+
 def find_missing_skills(
     detected_skills,
     job_description
@@ -170,8 +167,6 @@ def find_missing_skills(
 def home():
     return "Backend Running"
 
-
-@app.route("/upload", methods=["POST"])
 @app.route(
     "/match",
     methods=["POST"]
@@ -209,6 +204,8 @@ def match_resume():
         missing_skills
 
     })
+
+@app.route("/upload", methods=["POST"])
 def upload_resume():
 
     if "resume" not in request.files:
@@ -247,6 +244,5 @@ def upload_resume():
     "text": resume_text
     })
 
-
 if __name__ == "__main__":
-    app.run(debug=True)
+ app.run(debug=True, use_reloader=False)
