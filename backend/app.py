@@ -1,8 +1,10 @@
+from flask import Flask, request, jsonify
+from flask_cors import CORS
+import os
 from sentence_transformers import SentenceTransformer
 from sklearn.metrics.pairwise import cosine_similarity
 import pdfplumber
-from flask import Flask, request, jsonify
-import os
+from flask_cors import CORS, cross_origin
 
 model = SentenceTransformer(
     "all-MiniLM-L6-v2"
@@ -27,7 +29,17 @@ SKILLS = [
     "data structures",
     "algorithms"
 ]
+
 app = Flask(__name__)
+
+CORS(
+    app,
+    resources={
+        r"/*": {
+            "origins": "http://localhost:5173"
+        }
+    }
+)
 
 UPLOAD_FOLDER = "uploads"
 
@@ -167,10 +179,8 @@ def find_missing_skills(
 def home():
     return "Backend Running"
 
-@app.route(
-    "/match",
-    methods=["POST"]
-)
+@app.route("/match",methods=["POST"])
+@cross_origin()
 def match_resume():
 
     data = request.get_json()
@@ -206,6 +216,7 @@ def match_resume():
     })
 
 @app.route("/upload", methods=["POST"])
+@cross_origin()
 def upload_resume():
 
     if "resume" not in request.files:
