@@ -135,7 +135,49 @@ def ats_feedback(score):
 
     else:
         return "Poor ATS Resume"
-    
+def generate_suggestions(
+    resume_text,
+    skills
+):
+
+    suggestions = []
+
+    resume_text = resume_text.lower()
+
+    if len(skills) < 5:
+        suggestions.append(
+            "Add more technical skills"
+        )
+
+    if "project" not in resume_text:
+        suggestions.append(
+            "Add project details"
+        )
+
+    if (
+        "internship" not in resume_text
+        and
+        "experience" not in resume_text
+    ):
+        suggestions.append(
+            "Add internship or work experience"
+        )
+
+    if (
+        "certificate" not in resume_text
+        and
+        "certification" not in resume_text
+    ):
+        suggestions.append(
+            "Add certifications"
+        )
+
+    if "achievement" not in resume_text:
+        suggestions.append(
+            "Add achievements or accomplishments"
+        )
+
+    return suggestions   
 def calculate_match_score(
     resume_text,
     job_description
@@ -245,12 +287,16 @@ def upload_resume():
     detected_skills
     )
     feedback = ats_feedback(ats_score)
-
+    suggestions = generate_suggestions(
+    resume_text,
+    detected_skills
+)
     return jsonify({
     "message": "Resume uploaded successfully",
     "filename": file.filename,
     "ats_score": ats_score,
     "feedback": feedback,
+    "suggestions": suggestions,
     "skills": detected_skills,
     "text": resume_text
     })

@@ -5,20 +5,18 @@ function App() {
   const [result, setResult] = useState(null);
   const [jobDescription, setJobDescription] = useState("");
   const [matchResult, setMatchResult] = useState(null); 
+  const [loading, setLoading] = useState(false);
+  const [matching, setMatching] = useState(false); 
+  
   const uploadResume = async () => {
-
 if (!file) {
-
-alert("Please select a PDF");
-
 return;
-
 }
 
 const formData = new FormData();
-
 formData.append("resume", file);
 
+setLoading(true);
 try {
 
 const response = await axios.post(
@@ -28,19 +26,15 @@ const response = await axios.post(
 formData,
 
 {
-
 headers: {
 
 "Content-Type": "multipart/form-data",
-
 },
-
 }
-
 );
-
+setLoading(false);
 setResult(response.data);
-
+setLoading(false);
 } catch (error) {
  console.error(error);
 }
@@ -49,9 +43,10 @@ setResult(response.data);
 const matchResume = async () => {
 
   if (!result) {
-    alert("Upload resume first");
     return;
   }
+
+  setMatching(true);
 
   try {
 
@@ -64,65 +59,170 @@ const matchResume = async () => {
     );
 
     setMatchResult(response.data);
+    setMatching(false);
 
   } catch (error) {
-
     console.log(error);
-
-    alert("Matching Failed");
+    setMatching(false);
   }
 };
   return (
-    <div className="min-h-screen bg-gray-100 p-10">
-      
-      <h1 className="text-4xl font-bold text-center mb-10">
-        AI Resume Analyzer
-      </h1>
+    <div className="min-h-screen bg-slate-950 text-white p-8 relative overflow-hidden">
+    <div className="absolute top-0 left-0 w-96 h-96 bg-cyan-500/10 blur-[120px]" />
+<div className="absolute bottom-0 right-0 w-96 h-96 bg-purple-500/10 blur-[120px]" />
+     <h1 className="text-5xl font-bold text-center mb-2">
+  AI Resume Analyzer
+</h1>
+<p className="text-center text-slate-400 mb-10">
+  Analyze • Improve • Match
+</p>
 
-      <div className="max-w-4xl mx-auto bg-white p-8 rounded-xl shadow-lg">
+      <div
+  className="
+  max-w-4xl
+  mx-auto
+  bg-white/5
+  backdrop-blur-lg
+  border
+  border-white/10
+  p-8
+  rounded-3xl
+  shadow-2xl
+  "
+>
+        <h2 className="text-3xl font-bold mb-2">
+  Upload Resume
+</h2>
 
-        <h2 className="text-2xl font-semibold mb-4">
-          Upload Your Resume
-        </h2>
+<p className="text-slate-400 mb-6">
+  Upload a PDF and get ATS insights instantly.
+</p>
 
-        <input
-         type="file"
-         accept=".pdf"
-         className="border p-2 w-full"
-          onChange={(e) => setFile(e.target.files[0])}
-/>
-        {file && (
-  <p className="mt-2 text-green-600">
-    Selected: {file.name}
-  </p>
-)}
+        <label
+  className="
+  flex
+  flex-col
+  items-center
+  justify-center
+  w-full
+  h-40 md:h-56
+  border-2
+  border-dashed
+  border-slate-700
+  rounded-2xl
+  cursor-pointer
+  hover:border-sky-500
+  hover:bg-slate-800
+  transition
+  "
+>
+
+  <div className="text-center">
+
+    <p className="text-5xl mb-4">
+      📄
+    </p>
+
+    <p className="text-lg font-semibold">
+      Click to Upload Resume
+    </p>
+
+    <p className="text-slate-400 text-sm mt-2">
+      PDF files only
+    </p>
+
+    {file && (
+      <p className="mt-4 text-green-400">
+        ✓ {file.name}
+      </p>
+    )}
+
+  </div>
+
+  <input
+    type="file"
+    accept=".pdf"
+    className="hidden"
+    onChange={(e) =>
+      setFile(e.target.files[0])
+    }
+  />
+
+</label>
         <button
   onClick={uploadResume}
-  className="mt-4 px-6 py-2 bg-blue-600 text-white rounded"
+  className="mt-4 px-6 py-2 bg-gradient-to-r from-sky-500 to-cyan-500 hover:scale-105 text-white rounded"
 >
-  Upload Resume
+  {loading ? "Analyzing..." : "Upload Resume"}
 </button>
 {result && (
-  <div className="mt-6 border rounded-lg p-4">
-
+<div
+  className="
+  mt-8
+  bg-white/5
+  backdrop-blur-lg
+  rounded-2xl
+  p-6
+  border
+  border-white/10
+  shadow-xl
+  "
+>
     <h2 className="text-2xl font-bold mb-4">
       Analysis Result
     </h2>
 
-    <p>
-      <strong>ATS Score:</strong> {result.ats_score}
-    </p>
+    <div className="my-6">
+
+  <p className="text-slate-400 text-sm">
+    ATS SCORE
+  </p>
+
+  <h3 className="text-6xl font-bold text-green-400">
+    {result.ats_score}
+  </h3>
+
+</div>
 
     <p>
       <strong>Feedback:</strong> {result.feedback}
     </p>
+  <p className="mt-4">
+  <strong>Feedback:</strong>
+</p>
+
+<p className="text-green-400 mt-2">
+  {result.feedback}
+</p>
+
+<div className="flex flex-wrap gap-3 mt-3">
+
+  {result.skills?.map((skill, index) => (
+
+    <span
+      key={index}
+      className="
+      px-4 py-2
+      bg-sky-500/10
+      text-sky-300
+      border border-sky-500/30
+      rounded-full
+      text-sm
+      "
+    >
+      {skill}
+    </span>
+
+  ))}
+
+</div>
 
     <p className="mt-2">
       <strong>Detected Skills:</strong>
     </p>
 
     <ul className="list-disc ml-6">
-      {result.skills.map((skill, index) => (
+      {result.skills?.map((skill, index) => (
         <li key={index}>
           {skill}
         </li>
@@ -143,46 +243,80 @@ const matchResume = async () => {
     onChange={(e) =>
       setJobDescription(e.target.value)
     }
-    className="w-full border p-3 rounded"
+    className="
+w-full
+bg-slate-900
+border
+border-slate-700
+rounded-xl
+p-4
+text-white
+focus:outline-none
+focus:border-sky-500
+"
     placeholder="Paste Job Description Here..."
   />
 
   <button
     onClick={matchResume}
-    className="mt-4 px-6 py-2 bg-green-600 text-white rounded"
+    className="
+mt-4
+px-8
+py-3
+bg-gradient-to-r from-cyan-500 to-blue-500
+hover:bg-cyan-400
+hover:scale-105
+transition
+rounded-xl
+font-semibold
+"
   >
-    Match Resume
+    {matching ? "Matching..." : "Match Resume"}
   </button>
 
 </div>
 {matchResult && (
 
-  <div className="mt-6 border rounded-lg p-4">
+  <div className="mt-8 bg-slate-800 rounded-2xl p-6 border border-slate-700">
 
     <h2 className="text-2xl font-bold mb-4">
       Match Analysis
     </h2>
 
-    <p>
-      <strong>Match Score:</strong>
-      {matchResult.match_score}%
-    </p>
+    <div className="mb-6">
 
-    <p className="mt-3">
-      <strong>Missing Skills:</strong>
-    </p>
+  <p className="text-slate-400 text-sm">
+    MATCH SCORE
+  </p>
 
-    <ul className="list-disc ml-6">
+  <h3 className="text-5xl font-bold text-cyan-400">
+    {matchResult.match_score}%
+  </h3>
 
-      {matchResult.missing_skills.map(
-        (skill, index) => (
-          <li key={index}>
-            {skill}
-          </li>
-        )
-      )}
+</div>
 
-    </ul>
+    <div className="flex flex-wrap gap-3">
+
+  {matchResult.missing_skills?.map(
+    (skill, index) => (
+
+      <span
+        key={index}
+        className="
+        px-4 py-2
+        bg-red-500/10
+        text-red-300
+        border border-red-500/30
+        rounded-full
+        "
+      >
+        {skill}
+      </span>
+
+    )
+  )}
+
+</div>
 
   </div>
 
