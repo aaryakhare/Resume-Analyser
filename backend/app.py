@@ -1,12 +1,8 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import os
-#from sentence_transformers import SentenceTransformer
-#from sklearn.metrics.pairwise import cosine_similarity
 import pdfplumber
 from flask_cors import CORS, cross_origin
-
-#model = SentenceTransformer("all-MiniLM-L6-v2")
 SKILLS = [
     "python",
     "java",
@@ -176,84 +172,10 @@ def generate_suggestions(
         )
 
     return suggestions   
-def calculate_match_score(
-    resume_text,
-    job_description
-):
-
-    resume_embedding = model.encode(
-        [resume_text]
-    )
-
-    jd_embedding = model.encode(
-        [job_description]
-    )
-
-    similarity = cosine_similarity(
-        resume_embedding,
-        jd_embedding
-    )[0][0]
-
-    return round(float(similarity * 100), 2)
-
-def find_missing_skills(
-    detected_skills,
-    job_description
-):
-
-    missing = []
-
-    jd_text = job_description.lower()
-
-    for skill in SKILLS:
-
-        if (
-            skill in jd_text
-            and skill not in detected_skills
-        ):
-            missing.append(skill)
-
-    return missing
     
 @app.route("/")
 def home():
     return "Backend Running"
-
-#@app.route("/match",methods=["POST"])
-@cross_origin()
-def match_resume():
-
-    data = request.get_json()
-
-    resume_text = data["resume_text"]
-
-    job_description = data[
-        "job_description"
-    ]
-
-    detected_skills = detect_skills(
-        resume_text
-    )
-
-    match_score = calculate_match_score(
-        resume_text,
-        job_description
-    )
-
-    missing_skills = find_missing_skills(
-        detected_skills,
-        job_description
-    )
-
-    return jsonify({
-
-        "match_score":
-        match_score,
-
-        "missing_skills":
-        missing_skills
-
-    })
 
 @app.route("/upload", methods=["POST"])
 @cross_origin()
