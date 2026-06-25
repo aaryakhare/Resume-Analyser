@@ -8,32 +8,26 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [matching, setMatching] = useState(false); 
 
-  const uploadResume = async (selectedFile) => {
-  if (!selectedFile) {
-    alert("No file selected");
-    return;
-  }
-
-  const formData = new FormData();
-  formData.append("resume", selectedFile);
-
+ const uploadResume = async (file) => {
   try {
-    const res = await axios.post(
+    const formData = new FormData();
+    formData.append("resume", file);
+
+    const res = await fetch(
       "https://resume-analyser-4d6y.onrender.com/upload",
-      formData,
       {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
+        method: "POST",
+        body: formData
       }
     );
 
-    console.log("UPLOAD RESPONSE:", res.data);
-    setResult(res.data);
+    const data = await res.json();
 
+    console.log("RESPONSE:", data);
+    alert(JSON.stringify(data));
   } catch (err) {
-    console.log("UPLOAD ERROR:", err);
-    alert("Upload failed");
+    console.log("ERROR:", err);
+    alert("Upload failed: " + err.message);
   }
 };
 
