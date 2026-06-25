@@ -1,10 +1,10 @@
 from flask import Flask, request, jsonify
-from flask_cors import CORS
 import os
 import pdfplumber
 from flask_cors import CORS, cross_origin
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
+from werkzeug.utils import secure_filename
 SKILLS = [
     "python",
     "java",
@@ -28,7 +28,7 @@ SKILLS = [
 
 app = Flask(__name__)
 
-CORS(app, resources={r"/*": {"origins": "*"}})
+CORS(app, origins=["*"])
 UPLOAD_FOLDER = "uploads"
 
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
@@ -172,7 +172,6 @@ def home():
     return "Backend Running"
 
 @app.route("/upload", methods=["POST"])
-@cross_origin()
 def upload_resume():
 
     if "resume" not in request.files:
@@ -186,12 +185,12 @@ def upload_resume():
         return jsonify({
             "error": "No file selected"
         }), 400
+    filename = secure_filename(file.filename)
 
-    filepath = os.path.join(
-        app.config["UPLOAD_FOLDER"],
-        file.filename
-    )
+    if not filename.endswith(".pdf"):
+        return jsonify({"error": "Only PDF allowed"}), 400
 
+    filepath = os.path.join(app.config["UPLOAD_FOLDER"], filename)
     file.save(filepath)
 
     resume_text = extract_text_from_pdf(filepath)
@@ -217,42 +216,29 @@ def upload_resume():
 
 @app.route("/match", methods=["POST"])
 def match_resume():
-
     data = request.get_json()
+
+    if not data or "resume_text" not in data or "job_description" not in data:
+        return jsonify({"error": "Invalid input"}), 400
 
     resume_text = data["resume_text"]
     job_description = data["job_description"]
 
-    # TF-IDF similarity
-    texts = [resume_text, job_description]
+    try:
+        texts = [resume_text, job_description]
 
-    vectorizer = TfidfVectorizer().fit_transform(texts)
-    vectors = vectorizer.toarray()
+        vectorizer = TfidfVectorizer()
+        tfidf = vectorizer.fit_transform(texts)
 
-    similarity = cosine_similarity([vectors[0]], [vectors[1]])[0][0]
-    match_score = round(similarity * 100, 2)
+        similarity = cosine_similarity(tfidf[0], tfidf[1])[0][0]
+        match_score = round(similarity * 100, 2)
 
-    # simple missing skills detection
-    common_skills = [
-        "python","java","c++","javascript","react",
-        "nodejs","mongodb","sql","flask","machine learning"
-    ]
-
-    detected = []
-    missing = []
-
-    resume_lower = resume_text.lower()
-    jd_lower = job_description.lower()
-
-    for skill in common_skills:
-        if skill in resume_lower:
-            detected.append(skill)
-        if skill in jd_lower and skill not in resume_lower:
-            missing.append(skill)
+    except Exception as e:
+        return jsonify({"error": "Matching failed", "details": str(e)}), 500
 
     return jsonify({
         "match_score": match_score,
-        "missing_skills": missing
+        "missing_skills": []
     })
 
 if __name__ == "__main__":

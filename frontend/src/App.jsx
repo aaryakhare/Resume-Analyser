@@ -13,6 +13,7 @@ const uploadResume = async (file) => {
     alert("No file selected");
     return;
   }
+  setLoading(true);
 
   const formData = new FormData();
   formData.append("resume", file);
@@ -22,38 +23,40 @@ const uploadResume = async (file) => {
       "https://resume-analyser-4d6y.onrender.com/upload",
       formData
     );
-
-    console.log("SUCCESS:", res.data);
     setResult(res.data);
 
   } catch (err) {
     console.log("ERROR:", err.response?.data || err.message);
+  }finally {
+    setLoading(false);
   }
 };
 
 const matchResume = async () => {
-
-  if (!result) {
+  if (!result || !result.text) {
+    alert("Please upload resume first");
     return;
   }
 
   setMatching(true);
 
   try {
-
     const response = await axios.post(
-      "https://resume-analyser-4d6y.onrender.com/upload",
+      "https://resume-analyser-4d6y.onrender.com/match",
       {
         resume_text: result.text,
         job_description: jobDescription
       }
     );
 
+    console.log("MATCH RESPONSE:", response.data);
+
     setMatchResult(response.data);
-    setMatching(false);
 
   } catch (error) {
-    console.log(error);
+    console.log("MATCH ERROR:", error.response?.data || error.message);
+
+  } finally {
     setMatching(false);
   }
 };
@@ -134,18 +137,23 @@ const matchResume = async () => {
   type="file"
   accept="application/pdf"
   onChange={(e) => {
-    const file = e.target.files?.[0];
-    console.log("SELECTED FILE:", file);
-    uploadResume(file);
-  }}
+  const selectedFile = e.target.files?.[0];
+  setFile(selectedFile);
+}}
 />
 
 </label>
-        <button
-  onClick={uploadResume}
+      <button
+  onClick={() => {
+  if (!file) {
+    alert("Please select a PDF first");
+    return;
+  }
+  uploadResume(file);
+}}
   className="mt-4 px-6 py-2 bg-gradient-to-r from-sky-500 to-cyan-500 hover:scale-105 text-white rounded"
 >
-  {loading ? "Analyzing..." : "Upload Resume"}
+  Upload Resume
 </button>
 {result && (
 <div
@@ -175,12 +183,11 @@ const matchResume = async () => {
   </h3>
 
 </div>
-
-    <p>
-      <strong>Feedback:</strong> {result.feedback}
-    </p>
-  <p className="mt-4">
+ <p className="mt-4">
   <strong>Feedback:</strong>
+</p>
+<p className="text-green-400 mt-2">
+  {result.feedback}
 </p>
 
 <p className="text-green-400 mt-2">
