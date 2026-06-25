@@ -1,14 +1,12 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import os
-from sentence_transformers import SentenceTransformer
-from sklearn.metrics.pairwise import cosine_similarity
+#from sentence_transformers import SentenceTransformer
+#from sklearn.metrics.pairwise import cosine_similarity
 import pdfplumber
 from flask_cors import CORS, cross_origin
 
-model = SentenceTransformer(
-    "all-MiniLM-L6-v2"
-)
+#model = SentenceTransformer("all-MiniLM-L6-v2")
 SKILLS = [
     "python",
     "java",
@@ -221,7 +219,7 @@ def find_missing_skills(
 def home():
     return "Backend Running"
 
-@app.route("/match",methods=["POST"])
+#@app.route("/match",methods=["POST"])
 @cross_origin()
 def match_resume():
 
