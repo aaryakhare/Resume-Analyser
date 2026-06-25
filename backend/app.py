@@ -3,6 +3,8 @@ from flask_cors import CORS
 import os
 import pdfplumber
 from flask_cors import CORS, cross_origin
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
 SKILLS = [
     "python",
     "java",
@@ -211,6 +213,46 @@ def upload_resume():
     "suggestions": suggestions,
     "skills": detected_skills,
     "text": resume_text
+    })
+
+@app.route("/match", methods=["POST"])
+def match_resume():
+
+    data = request.get_json()
+
+    resume_text = data["resume_text"]
+    job_description = data["job_description"]
+
+    # TF-IDF similarity
+    texts = [resume_text, job_description]
+
+    vectorizer = TfidfVectorizer().fit_transform(texts)
+    vectors = vectorizer.toarray()
+
+    similarity = cosine_similarity([vectors[0]], [vectors[1]])[0][0]
+    match_score = round(similarity * 100, 2)
+
+    # simple missing skills detection
+    common_skills = [
+        "python","java","c++","javascript","react",
+        "nodejs","mongodb","sql","flask","machine learning"
+    ]
+
+    detected = []
+    missing = []
+
+    resume_lower = resume_text.lower()
+    jd_lower = job_description.lower()
+
+    for skill in common_skills:
+        if skill in resume_lower:
+            detected.append(skill)
+        if skill in jd_lower and skill not in resume_lower:
+            missing.append(skill)
+
+    return jsonify({
+        "match_score": match_score,
+        "missing_skills": missing
     })
 
 if __name__ == "__main__":
