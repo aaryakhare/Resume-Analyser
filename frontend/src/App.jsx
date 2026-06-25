@@ -21,7 +21,8 @@ try {
 
 const response = await axios.post(
 
-"http://localhost:5000/upload",
+ "https://resume-analyser-4d6y.onrender.com/upload" ,
+
 
 formData,
 
@@ -51,7 +52,7 @@ const matchResume = async () => {
   try {
 
     const response = await axios.post(
-      "http://localhost:5000/match",
+      "https://resume-analyser-4d6y.onrender.com/upload",
       {
         resume_text: result.text,
         job_description: jobDescription
