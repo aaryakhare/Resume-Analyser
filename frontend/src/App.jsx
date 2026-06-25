@@ -7,40 +7,36 @@ function App() {
   const [matchResult, setMatchResult] = useState(null); 
   const [loading, setLoading] = useState(false);
   const [matching, setMatching] = useState(false); 
-  
-  const uploadResume = async () => {
-if (!file) {
-return;
-}
 
-const formData = new FormData();
-formData.append("resume", file);
+  const uploadResume = async (selectedFile) => {
+  if (!selectedFile) {
+    alert("No file selected");
+    return;
+  }
 
-setLoading(true);
-try {
+  const formData = new FormData();
+  formData.append("resume", selectedFile);
 
-const response = await axios.post(
+  try {
+    const res = await axios.post(
+      "https://resume-analyser-4d6y.onrender.com/upload",
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      }
+    );
 
- "https://resume-analyser-4d6y.onrender.com/upload" ,
+    console.log("UPLOAD RESPONSE:", res.data);
+    setResult(res.data);
 
-
-formData,
-
-{
-headers: {
-
-"Content-Type": "multipart/form-data",
-},
-}
-);
-setLoading(false);
-setResult(response.data);
-setLoading(false);
-} catch (error) {
- console.error(error);
-}
-
+  } catch (err) {
+    console.log("UPLOAD ERROR:", err);
+    alert("Upload failed");
+  }
 };
+
 const matchResume = async () => {
 
   if (!result) {
@@ -140,14 +136,15 @@ const matchResume = async () => {
 
   </div>
 
-  <input
-    type="file"
-    accept=".pdf"
-    className="hidden"
-    onChange={(e) =>
-      setFile(e.target.files[0])
-    }
-  />
+ <input
+  type="file"
+  accept="application/pdf"
+  onChange={(e) => {
+    const file = e.target.files?.[0];
+    console.log("SELECTED FILE:", file);
+    uploadResume(file);
+  }}
+/>
 
 </label>
         <button
